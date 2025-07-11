@@ -1,0 +1,5 @@
+<h1>Welcome, <%= current_user.name || current_user.email %></h1>
+
+<p><strong>Access Token:</strong> <%= current_user.google_token %></p>
+<p><strong>Refresh Token:</strong> <%= current_user.google_refresh_token %></p>
+<p><strong>Token Expires At:</strong> <%= current_user.token_expires_at %></p>
