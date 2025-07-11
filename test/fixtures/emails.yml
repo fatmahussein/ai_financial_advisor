@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  gmail_id: MyString
+  subject: MyString
+  sender: MyString
+  snippet: MyText
+  body: MyText
+  received_at: 2025-07-11 22:25:12
+
+two:
+  user: two
+  gmail_id: MyString
+  subject: MyString
+  sender: MyString
+  snippet: MyText
+  body: MyText
+  received_at: 2025-07-11 22:25:12
