@@ -3,8 +3,7 @@ class ApplicationController < ActionController::Base
   allow_browser versions: :modern
   protect_from_forgery with: :exception
 
-  def after_sign_in_path_for(resource)
+  def after_sign_in_path_for(_resource)
     home_index_path
   end
-
 end
