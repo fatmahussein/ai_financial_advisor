@@ -5,7 +5,7 @@ class GmailService
   GMAIL = Google::Apis::GmailV1
   SCOPE = [
     'https://www.googleapis.com/auth/gmail.readonly'
-  ]
+  ].freeze
 
   def initialize(user)
     @user = user
@@ -42,27 +42,26 @@ class GmailService
 
   def authorize
     Signet::OAuth2::Client.new(
-      client_id: ENV['GOOGLE_CLIENT_ID'],
-      client_secret: ENV['GOOGLE_CLIENT_SECRET'],
+      client_id: ENV.fetch('GOOGLE_CLIENT_ID', nil),
+      client_secret: ENV.fetch('GOOGLE_CLIENT_SECRET', nil),
       access_token: @user.google_token,
       refresh_token: @user.google_refresh_token,
       token_credential_uri: 'https://oauth2.googleapis.com/token'
     )
   end
 
-    def extract_body(payload)
+  def extract_body(payload)
     parts = payload.parts || [payload]
 
     parts.map do |part|
-        next unless part.mime_type == 'text/plain' && part.body&.data
+      next unless part.mime_type == 'text/plain' && part.body&.data
 
-        begin
+      begin
         Base64.urlsafe_decode64(part.body.data).force_encoding('UTF-8')
-        rescue ArgumentError => e
+      rescue ArgumentError => e
         Rails.logger.warn "Skipping invalid base64 body: #{e.message}"
         nil
-        end
+      end
     end.compact.join("\n")
-    end
-
+  end
 end
