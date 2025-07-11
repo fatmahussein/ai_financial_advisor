@@ -18,4 +18,6 @@ Rails.application.routes.draw do
   get "home/index"
   # Defines the root path route ("/")
   root to: "home#index"
+  get 'sync_emails', to: 'home#sync_emails'
+
 end
