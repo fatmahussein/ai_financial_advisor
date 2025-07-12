@@ -32,6 +32,15 @@ class HubspotController < ApplicationController
     end
   end
 
+  def contacts
+  client = Hubspot::Client.new(current_user)
+  @contacts = client.contacts
+  Rails.logger.debug "Fetched HubSpot contacts: #{@contacts.inspect}"
+  rescue => e
+    Rails.logger.error "HubSpot contacts fetch failed: #{e.message}"
+    redirect_to home_index_path, alert: "Unable to fetch HubSpot contacts."
+  end
+
   private
 
   def exchange_code_for_tokens(code)
