@@ -22,5 +22,6 @@ get '/hubspot/callback', to: 'hubspot#callback', as: :hubspot_callback
   # Defines the root path route ("/")
   root to: "home#index"
   get 'sync_emails', to: 'home#sync_emails'
+  get '/hubspot/contacts', to: 'hubspot#contacts'
 
 end
