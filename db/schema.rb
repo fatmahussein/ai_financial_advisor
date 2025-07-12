@@ -10,9 +10,24 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_12_065847) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_12_201955) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "vector"
+
+  create_table "contact_notes", force: :cascade do |t|
+    t.bigint "contact_id", null: false
+    t.string "hubspot_id"
+    t.text "body"
+    t.vector "embedding", limit: 768
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.datetime "created_at_hubspot"
+    t.datetime "updated_at_hubspot"
+    t.index ["contact_id"], name: "index_contact_notes_on_contact_id"
+    t.index ["user_id"], name: "index_contact_notes_on_user_id"
+  end
 
   create_table "contacts", force: :cascade do |t|
     t.string "hubspot_id"
@@ -27,6 +42,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_12_065847) do
     t.index ["user_id"], name: "index_contacts_on_user_id"
   end
 
+  create_table "email_embeddings", force: :cascade do |t|
+    t.bigint "email_id", null: false
+    t.vector "embedding", limit: 1536, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email_id"], name: "index_email_embeddings_on_email_id", unique: true
+  end
+
   create_table "emails", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "gmail_id"
@@ -37,6 +60,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_12_065847) do
     t.datetime "received_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.vector "embedding", limit: 768
+    t.index ["embedding"], name: "index_emails_on_embedding", opclass: :vector_cosine_ops, using: :ivfflat
     t.index ["user_id"], name: "index_emails_on_user_id"
   end
 
@@ -61,6 +86,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_12_065847) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "contact_notes", "contacts"
+  add_foreign_key "contact_notes", "users"
   add_foreign_key "contacts", "users"
+  add_foreign_key "email_embeddings", "emails"
   add_foreign_key "emails", "users"
 end
