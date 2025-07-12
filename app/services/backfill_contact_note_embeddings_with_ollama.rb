@@ -1,18 +1,16 @@
 class BackfillContactNoteEmbeddingsWithOllama
-  def self.call(model = "nomic-embed-text")
+  def self.call(model = 'nomic-embed-text')
     ContactNote.where(embedding: nil).where.not(body: [nil, '']).find_each(batch_size: 20) do |note|
-      begin
-        embedding = OllamaEmbeddingGenerator.new(note.body, model).call
+      embedding = OllamaEmbeddingGenerator.new(note.body, model).call
 
-        if valid_embedding?(embedding)
-          note.update!(embedding: embedding)
-          puts "✅ Embedded note ID #{note.id}"
-        else
-          puts "⚠️ Invalid embedding for note ID #{note.id} (got: #{embedding.class}, size: #{embedding&.size})"
-        end
-      rescue => e
-        puts "❌ Failed to embed note #{note.id}: #{e.class} - #{e.message}"
+      if valid_embedding?(embedding)
+        note.update!(embedding: embedding)
+        puts "✅ Embedded note ID #{note.id}"
+      else
+        puts "⚠️ Invalid embedding for note ID #{note.id} (got: #{embedding.class}, size: #{embedding&.size})"
       end
+    rescue StandardError => e
+      puts "❌ Failed to embed note #{note.id}: #{e.class} - #{e.message}"
     end
   end
 

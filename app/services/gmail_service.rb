@@ -1,7 +1,7 @@
 require 'google/apis/gmail_v1'
 require 'googleauth'
 require 'base64'
-require 'mail' 
+require 'mail'
 
 class GmailService
   GMAIL = Google::Apis::GmailV1
@@ -52,49 +52,49 @@ class GmailService
     )
   end
 
-def extract_body(payload)
-  return "" unless payload
+  def extract_body(payload)
+    return '' unless payload
 
-  parts = flatten_parts(payload)
+    parts = flatten_parts(payload)
 
-  # Prefer plain > html
-  part = parts.find { |p| p.mime_type == 'text/plain' } ||
-         parts.find { |p| p.mime_type == 'text/html' } ||
-         parts.first
+    # Prefer plain > html
+    part = parts.find { |p| p.mime_type == 'text/plain' } ||
+           parts.find { |p| p.mime_type == 'text/html' } ||
+           parts.first
 
-  return "" unless part&.body&.data
+    return '' unless part&.body&.data
 
-  encoding = (part.headers || []).find { |h| h.name.downcase == 'content-transfer-encoding' }&.value&.downcase || 'base64'
-  raw = part.body.data
+    encoding = (part.headers || []).find do |h|
+      h.name.downcase == 'content-transfer-encoding'
+    end&.value&.downcase || 'base64'
+    raw = part.body.data
 
-  decoded =
-    case encoding
-    when 'base64'
-      Base64.urlsafe_decode64(raw)
-    when 'quoted-printable'
-      Mail::Encodings::QuotedPrintable.decode(raw)
-    else
-      raw
-    end
+    decoded =
+      case encoding
+      when 'base64'
+        Base64.urlsafe_decode64(raw)
+      when 'quoted-printable'
+        Mail::Encodings::QuotedPrintable.decode(raw)
+      else
+        raw
+      end
 
-  decoded = decoded.force_encoding("UTF-8").scrub
+    decoded = decoded.force_encoding('UTF-8').scrub
 
+    # Clean HTML if no plain text
+    decoded = ActionView::Base.full_sanitizer.sanitize(decoded) if part.mime_type == 'text/html'
 
-  # Clean HTML if no plain text
-  decoded = ActionView::Base.full_sanitizer.sanitize(decoded) if part.mime_type == 'text/html'
+    puts "🧠 Decoded: #{decoded.truncate(200)}"
+    decoded
+  rescue StandardError => e
+    puts "⚠️ extract_body failed: #{e.message}"
+    ''
+  end
 
-  puts "🧠 Decoded: #{decoded.truncate(200)}"
-  decoded
-rescue => e
-  puts "⚠️ extract_body failed: #{e.message}"
-  ""
-end
+  # Recursively flatten all parts
+  def flatten_parts(part)
+    return [part] unless part.parts&.any?
 
-# Recursively flatten all parts
-def flatten_parts(part)
-  return [part] unless part.parts&.any?
-  part.parts.flat_map { |p| flatten_parts(p) }
-end
-
-
+    part.parts.flat_map { |p| flatten_parts(p) }
+  end
 end

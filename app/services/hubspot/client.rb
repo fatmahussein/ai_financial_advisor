@@ -10,13 +10,13 @@ module Hubspot
       @user = user
     end
 
-  def associated_contact_id(note_id)
-    url = URI("#{BASE_URL}/crm/v3/objects/notes/#{note_id}/associations/contacts")
+    def associated_contact_id(note_id)
+      url = URI("#{BASE_URL}/crm/v3/objects/notes/#{note_id}/associations/contacts")
 
-    headers = {
-      'Authorization' => "Bearer #{@user.hubspot_access_token}",
-      'Content-Type' => 'application/json'
-    }
+      headers = {
+        'Authorization' => "Bearer #{@user.hubspot_access_token}",
+        'Content-Type' => 'application/json'
+      }
 
       res = Net::HTTP.start(url.host, url.port, use_ssl: true) do |http|
         http.get(url.request_uri, headers)
@@ -25,43 +25,41 @@ module Hubspot
       return nil unless res.is_a?(Net::HTTPSuccess)
 
       parsed = JSON.parse(res.body)
-      parsed.dig("results", 0, "id") # returns first associated contact_id, if present
+      parsed.dig('results', 0, 'id') # returns first associated contact_id, if present
     end
 
- def sync_notes!
-  ensure_valid_token!
-  notes = fetch_all_notes
+    def sync_notes!
+      ensure_valid_token!
+      notes = fetch_all_notes
 
-  notes.each do |note|
-    props = note["properties"] || {}
+      notes.each do |note|
+        props = note['properties'] || {}
 
-    # Find the associated contact ID via API
-    contact_id = associated_contact_id(note['id'])
+        # Find the associated contact ID via API
+        contact_id = associated_contact_id(note['id'])
 
-    unless contact_id
-      puts "⚠️ No contact association found for note #{note['id']}. Skipping."
-      next
+        unless contact_id
+          puts "⚠️ No contact association found for note #{note['id']}. Skipping."
+          next
+        end
+
+        contact = @user.contacts.find_by(hubspot_id: contact_id)
+        unless contact
+          puts "⚠️ No local contact found for HubSpot contact ID #{contact_id}. Skipping note #{note['id']}."
+          next
+        end
+
+        plain_body = Nokogiri::HTML(props['hs_note_body']).text.strip
+
+        ContactNote.find_or_initialize_by(hubspot_id: note['id'], user_id: @user.id).tap do |local_note|
+          local_note.contact = contact
+          local_note.body = plain_body
+          local_note.created_at_hubspot = note['createdAt']
+          local_note.updated_at_hubspot = note['updatedAt']
+          local_note.save!
+        end
+      end
     end
-
-    contact = @user.contacts.find_by(hubspot_id: contact_id)
-    unless contact
-      puts "⚠️ No local contact found for HubSpot contact ID #{contact_id}. Skipping note #{note['id']}."
-      next
-    end
-
-    plain_body = Nokogiri::HTML(props["hs_note_body"]).text.strip
-
-    ContactNote.find_or_initialize_by(hubspot_id: note['id'], user_id: @user.id).tap do |local_note|
-      local_note.contact = contact
-      local_note.body = plain_body
-      local_note.created_at_hubspot = note["createdAt"]
-      local_note.updated_at_hubspot = note["updatedAt"]
-      local_note.save!
-    end
-  end
-end
-
-
 
     private
 
@@ -91,8 +89,8 @@ end
         parsed = JSON.parse(response.body)
         Rails.logger.debug "🔍 HubSpot Notes Response: #{parsed.inspect}"
 
-        all_notes.concat(parsed["results"])
-        after = parsed.dig("paging", "next", "after")
+        all_notes.concat(parsed['results'])
+        after = parsed.dig('paging', 'next', 'after')
         break unless after
       end
 
@@ -100,4 +98,3 @@ end
     end
   end
 end
-
