@@ -29,21 +29,20 @@ class User < ApplicationRecord
     user
   end
 
-    def hubspot_token_expired?
+  def hubspot_token_expired?
     hubspot_token_expires_at.nil? || Time.current >= hubspot_token_expires_at
   end
 
-  
   def refresh_hubspot_token!
     return unless hubspot_refresh_token.present?
 
     uri = URI('https://api.hubapi.com/oauth/v1/token')
     response = Net::HTTP.post_form(uri, {
-      grant_type: 'refresh_token',
-      client_id: ENV.fetch('HUBSPOT_CLIENT_ID', nil),
-      client_secret: ENV.fetch('HUBSPOT_CLIENT_SECRET', nil),
-      refresh_token: hubspot_refresh_token
-    })
+                                     grant_type: 'refresh_token',
+                                     client_id: ENV.fetch('HUBSPOT_CLIENT_ID', nil),
+                                     client_secret: ENV.fetch('HUBSPOT_CLIENT_SECRET', nil),
+                                     refresh_token: hubspot_refresh_token
+                                   })
 
     json = JSON.parse(response.body)
 
@@ -59,9 +58,7 @@ class User < ApplicationRecord
     end
   end
 
-  
   def ensure_valid_hubspot_token!
     refresh_hubspot_token! if hubspot_token_expired?
   end
-
 end
