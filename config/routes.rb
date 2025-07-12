@@ -1,7 +1,9 @@
 Rails.application.routes.draw do
-get '/hubspot/connect', to: 'hubspot#connect', as: :hubspot_connect
-get '/hubspot/callback', to: 'hubspot#callback', as: :hubspot_callback
+  get "contacts/index"
+  get '/hubspot/connect', to: 'hubspot#connect', as: :hubspot_connect
+  get '/hubspot/callback', to: 'hubspot#callback', as: :hubspot_callback
 
+  resources :contacts, only: [:index]
 
   devise_for :users, controllers: {
     omniauth_callbacks: 'users/omniauth_callbacks'
@@ -22,5 +24,8 @@ get '/hubspot/callback', to: 'hubspot#callback', as: :hubspot_callback
   # Defines the root path route ("/")
   root to: "home#index"
   get 'sync_emails', to: 'home#sync_emails'
+  get '/hubspot/contacts', to: 'hubspot#contacts'
+  get 'hubspot/sync_contacts', to: 'hubspot#sync_contacts'  
+  post '/hubspot/sync_contacts', to: 'hubspot#sync_contacts', as: :sync_hubspot_contacts
 
 end

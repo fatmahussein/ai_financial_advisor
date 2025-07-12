@@ -1,0 +1,28 @@
+<h1 class="text-2xl font-bold mb-4">Your HubSpot Contacts (Synced)</h1>
+
+<%= button_to "Sync Contacts from HubSpot", sync_hubspot_contacts_path, method: :post, class: "btn btn-primary mb-4" %>
+
+<% if @contacts.any? %>
+  <table class="min-w-full bg-white shadow rounded-lg overflow-hidden border border-gray-200">
+    <thead class="bg-gray-100 text-left">
+      <tr>
+        <th class="px-4 py-2">First Name</th>
+        <th class="px-4 py-2">Last Name</th>
+        <th class="px-4 py-2">Email</th>
+        <th class="px-4 py-2">Synced At</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @contacts.each do |contact| %>
+        <tr class="border-t">
+          <td class="px-4 py-2"><%= contact.first_name %></td>
+          <td class="px-4 py-2"><%= contact.last_name %></td>
+          <td class="px-4 py-2"><%= contact.email %></td>
+          <td class="px-4 py-2"><%= contact.updated_at_hubspot&.to_time&.strftime("%Y-%m-%d %H:%M") %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <p>No contacts found. Try syncing from HubSpot.</p>
+<% end %>

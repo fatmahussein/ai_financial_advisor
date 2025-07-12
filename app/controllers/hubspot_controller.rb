@@ -32,6 +32,40 @@ class HubspotController < ApplicationController
     end
   end
 
+  def contacts
+    client = Hubspot::Client.new(current_user)
+    @contacts = client.contacts
+    Rails.logger.debug "Fetched HubSpot contacts: #{@contacts.inspect}"
+  rescue StandardError => e
+    Rails.logger.error "HubSpot contacts fetch failed: #{e.message}"
+    redirect_to home_index_path, alert: 'Unable to fetch HubSpot contacts.'
+  end
+
+  def sync_contacts
+    client = Hubspot::Client.new(current_user)
+    contacts_data = client.contacts
+
+    contacts_data.each do |data|
+      contact = current_user.contacts.find_or_initialize_by(hubspot_id: data['id'])
+      properties = data['properties']
+
+      contact.assign_attributes(
+        first_name: properties['firstname'],
+        last_name: properties['lastname'],
+        email: properties['email'],
+        created_at_hubspot: data['createdAt'],
+        updated_at_hubspot: data['updatedAt']
+      )
+
+      contact.save!
+    end
+
+    redirect_to contacts_path, notice: 'HubSpot contacts synced successfully.'
+  rescue StandardError => e
+    Rails.logger.error "HubSpot sync failed: #{e.message}"
+    redirect_to home_index_path, alert: 'Failed to sync contacts from HubSpot.'
+  end
+
   private
 
   def exchange_code_for_tokens(code)
