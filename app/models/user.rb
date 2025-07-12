@@ -61,4 +61,25 @@ class User < ApplicationRecord
   def ensure_valid_hubspot_token!
     refresh_hubspot_token! if hubspot_token_expired?
   end
+
+  def ensure_valid_google_token!
+  client = Signet::OAuth2::Client.new(
+    client_id: ENV.fetch('GOOGLE_CLIENT_ID'),
+    client_secret: ENV.fetch('GOOGLE_CLIENT_SECRET'),
+    access_token: google_token,
+    refresh_token: google_refresh_token,
+    token_credential_uri: 'https://oauth2.googleapis.com/token'
+  )
+
+  if google_token_expires_at.nil? || google_token_expires_at.past?
+    client.fetch_access_token!
+    update!(
+      google_token: client.access_token,
+      google_token_expires_at: Time.now + client.expires_in.seconds
+    )
+  end
+
+  client
+end
+
 end
