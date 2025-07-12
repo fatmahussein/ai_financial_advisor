@@ -56,39 +56,61 @@ class GmailService
     return '' unless payload
 
     parts = flatten_parts(payload)
-
-    # Prefer plain > html
-    part = parts.find { |p| p.mime_type == 'text/plain' } ||
-           parts.find { |p| p.mime_type == 'text/html' } ||
-           parts.first
-
+    part = select_preferred_part(parts)
     return '' unless part&.body&.data
 
-    encoding = (part.headers || []).find do |h|
-      h.name.downcase == 'content-transfer-encoding'
-    end&.value&.downcase || 'base64'
-    raw = part.body.data
-
-    decoded =
-      case encoding
-      when 'base64'
-        Base64.urlsafe_decode64(raw)
-      when 'quoted-printable'
-        Mail::Encodings::QuotedPrintable.decode(raw)
-      else
-        raw
-      end
-
-    decoded = decoded.force_encoding('UTF-8').scrub
-
-    # Clean HTML if no plain text
-    decoded = ActionView::Base.full_sanitizer.sanitize(decoded) if part.mime_type == 'text/html'
+    decoded = decode_part_body(part)
+    decoded = sanitize_html(decoded) if part.mime_type == 'text/html'
 
     puts "🧠 Decoded: #{decoded.truncate(200)}"
     decoded
   rescue StandardError => e
     puts "⚠️ extract_body failed: #{e.message}"
     ''
+  end
+
+  def select_preferred_part(parts)
+    parts.find { |p| p.mime_type == 'text/plain' } ||
+      parts.find { |p| p.mime_type == 'text/html' } ||
+      parts.first
+  end
+
+  def decode_part_body(part)
+    encoding = content_transfer_encoding(part) || 'base64'
+    raw = part.body.data
+
+    decoded = decode_by_encoding(raw, encoding)
+    decoded.force_encoding('UTF-8').scrub
+  end
+
+  def content_transfer_encoding(part)
+    (part.headers || []).find { |h| h.name.downcase == 'content-transfer-encoding' }&.value&.downcase
+  end
+
+  def decode_by_encoding(raw, encoding)
+    case encoding
+    when 'base64'
+      decode_base64(raw)
+    when 'quoted-printable'
+      decode_quoted_printable(raw)
+    else
+      raw
+    end
+  end
+
+  def decode_base64(raw)
+    Base64.urlsafe_decode64(raw)
+  rescue ArgumentError
+    # fallback if urlsafe fails
+    Base64.decode64(raw)
+  end
+
+  def decode_quoted_printable(raw)
+    Mail::Encodings::QuotedPrintable.decode(raw)
+  end
+
+  def sanitize_html(html)
+    ActionView::Base.full_sanitizer.sanitize(html)
   end
 
   # Recursively flatten all parts
