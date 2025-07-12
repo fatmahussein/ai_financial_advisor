@@ -18,19 +18,19 @@ class HubspotController < ApplicationController
                 allow_other_host: true
   end
 
- def callback
-  Rails.logger.debug "HubSpot callback params: #{params.inspect}"
+  def callback
+    Rails.logger.debug "HubSpot callback params: #{params.inspect}"
 
-  @user = fetch_user_from_state(params[:state])
-  return handle_invalid_state unless @user
+    @user = fetch_user_from_state(params[:state])
+    return handle_invalid_state unless @user
 
-  if params[:code].present?
-    process_token_exchange(params[:code])
-  else
-    Rails.logger.warn 'No code param found in HubSpot callback'
-    redirect_to home_index_path, alert: 'Authorization code missing.'
+    if params[:code].present?
+      process_token_exchange(params[:code])
+    else
+      Rails.logger.warn 'No code param found in HubSpot callback'
+      redirect_to home_index_path, alert: 'Authorization code missing.'
+    end
   end
-end
 
   private
 
@@ -49,38 +49,36 @@ end
   end
 
   def fetch_user_from_state(state)
-  user_id = Rails.cache.read("hubspot_oauth_#{state}")
-  Rails.cache.delete("hubspot_oauth_#{state}")
-  User.find_by(id: user_id)
-end
-
-
-def handle_invalid_state
-  Rails.logger.warn "Invalid or expired HubSpot state token: #{params[:state]}"
-  redirect_to new_user_session_path, alert: 'Session expired. Please try connecting again.'
-end
-
-def process_token_exchange(code)
-  response = exchange_code_for_tokens(code)
-  Rails.logger.debug "HubSpot token exchange response: #{response.inspect}"
-
-  if response['access_token']
-    update_user_tokens(@user, response)
-    Rails.logger.info "HubSpot connected successfully for user #{@user.email}"
-    sign_in(@user) unless current_user == @user
-    redirect_to home_index_path, notice: 'HubSpot connected successfully!'
-  else
-    Rails.logger.error "Failed to retrieve HubSpot tokens: #{response.inspect}"
-    redirect_to home_index_path, alert: 'Failed to connect with HubSpot.'
+    user_id = Rails.cache.read("hubspot_oauth_#{state}")
+    Rails.cache.delete("hubspot_oauth_#{state}")
+    User.find_by(id: user_id)
   end
-end
 
-def update_user_tokens(user, response)
-  user.update!(
-    hubspot_access_token: response['access_token'],
-    hubspot_refresh_token: response['refresh_token'],
-    hubspot_token_expires_at: Time.current + response['expires_in'].to_i.seconds
-  )
-end
+  def handle_invalid_state
+    Rails.logger.warn "Invalid or expired HubSpot state token: #{params[:state]}"
+    redirect_to new_user_session_path, alert: 'Session expired. Please try connecting again.'
+  end
 
+  def process_token_exchange(code)
+    response = exchange_code_for_tokens(code)
+    Rails.logger.debug "HubSpot token exchange response: #{response.inspect}"
+
+    if response['access_token']
+      update_user_tokens(@user, response)
+      Rails.logger.info "HubSpot connected successfully for user #{@user.email}"
+      sign_in(@user) unless current_user == @user
+      redirect_to home_index_path, notice: 'HubSpot connected successfully!'
+    else
+      Rails.logger.error "Failed to retrieve HubSpot tokens: #{response.inspect}"
+      redirect_to home_index_path, alert: 'Failed to connect with HubSpot.'
+    end
+  end
+
+  def update_user_tokens(user, response)
+    user.update!(
+      hubspot_access_token: response['access_token'],
+      hubspot_refresh_token: response['refresh_token'],
+      hubspot_token_expires_at: Time.current + response['expires_in'].to_i.seconds
+    )
+  end
 end
