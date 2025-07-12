@@ -12,7 +12,8 @@ class GmailService
   def initialize(user)
     @user = user
     @service = GMAIL::GmailService.new
-    @service.authorization = authorize
+    @service.authorization = @user.ensure_valid_google_token!
+
   end
 
   def fetch_and_store_messages
