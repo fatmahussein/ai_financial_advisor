@@ -1,3 +1,7 @@
+require 'net/http'
+require 'uri'
+require 'json'
+
 class User < ApplicationRecord
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
@@ -23,4 +27,40 @@ class User < ApplicationRecord
     user.save!
     user
   end
+
+    def hubspot_token_expired?
+    hubspot_token_expires_at.nil? || Time.current >= hubspot_token_expires_at
+  end
+
+  
+  def refresh_hubspot_token!
+    return unless hubspot_refresh_token.present?
+
+    uri = URI('https://api.hubapi.com/oauth/v1/token')
+    response = Net::HTTP.post_form(uri, {
+      grant_type: 'refresh_token',
+      client_id: ENV.fetch('HUBSPOT_CLIENT_ID', nil),
+      client_secret: ENV.fetch('HUBSPOT_CLIENT_SECRET', nil),
+      refresh_token: hubspot_refresh_token
+    })
+
+    json = JSON.parse(response.body)
+
+    if json['access_token']
+      update!(
+        hubspot_access_token: json['access_token'],
+        hubspot_refresh_token: json['refresh_token'] || hubspot_refresh_token,
+        hubspot_token_expires_at: Time.current + json['expires_in'].to_i.seconds
+      )
+    else
+      Rails.logger.error("HubSpot token refresh failed: #{json}")
+      false
+    end
+  end
+
+  
+  def ensure_valid_hubspot_token!
+    refresh_hubspot_token! if hubspot_token_expired?
+  end
+
 end
