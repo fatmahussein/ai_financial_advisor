@@ -40,6 +40,21 @@ def contacts
   all_contacts
 end
 
+def sync_contacts!
+  contacts.each do |contact|
+    properties = contact['properties'] || {}
+
+    Contact.find_or_initialize_by(hubspot_id: contact['id'], user: @user).tap do |local_contact|
+      local_contact.first_name = properties['firstname']
+      local_contact.last_name = properties['lastname']
+      local_contact.email = properties['email']
+      local_contact.created_at_hubspot = contact['createdAt']
+      local_contact.updated_at_hubspot = contact['updatedAt']
+      local_contact.save!
+    end
+  end
+end
+
 
     private
 
