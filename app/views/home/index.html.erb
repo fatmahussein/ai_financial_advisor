@@ -3,3 +3,4 @@
 <p><strong>Access Token:</strong> <%= current_user.google_token %></p>
 <p><strong>Refresh Token:</strong> <%= current_user.google_refresh_token %></p>
 <p><strong>Token Expires At:</strong> <%= current_user.token_expires_at %></p>
+<%= link_to "View HubSpot Contacts", hubspot_contacts_path %>
