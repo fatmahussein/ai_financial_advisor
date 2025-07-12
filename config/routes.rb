@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+get '/hubspot/connect', to: 'hubspot#connect', as: :hubspot_connect
+get '/hubspot/callback', to: 'hubspot#callback', as: :hubspot_callback
+
 
   devise_for :users, controllers: {
     omniauth_callbacks: 'users/omniauth_callbacks'
