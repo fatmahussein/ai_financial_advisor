@@ -1,5 +1,7 @@
 require 'google/apis/gmail_v1'
 require 'googleauth'
+require 'base64'
+require 'mail' 
 
 class GmailService
   GMAIL = Google::Apis::GmailV1
@@ -50,18 +52,49 @@ class GmailService
     )
   end
 
-  def extract_body(payload)
-    parts = payload.parts || [payload]
+def extract_body(payload)
+  return "" unless payload
 
-    parts.map do |part|
-      next unless part.mime_type == 'text/plain' && part.body&.data
+  parts = flatten_parts(payload)
 
-      begin
-        Base64.urlsafe_decode64(part.body.data).force_encoding('UTF-8')
-      rescue ArgumentError => e
-        Rails.logger.warn "Skipping invalid base64 body: #{e.message}"
-        nil
-      end
-    end.compact.join("\n")
-  end
+  # Prefer plain > html
+  part = parts.find { |p| p.mime_type == 'text/plain' } ||
+         parts.find { |p| p.mime_type == 'text/html' } ||
+         parts.first
+
+  return "" unless part&.body&.data
+
+  encoding = (part.headers || []).find { |h| h.name.downcase == 'content-transfer-encoding' }&.value&.downcase || 'base64'
+  raw = part.body.data
+
+  decoded =
+    case encoding
+    when 'base64'
+      Base64.urlsafe_decode64(raw)
+    when 'quoted-printable'
+      Mail::Encodings::QuotedPrintable.decode(raw)
+    else
+      raw
+    end
+
+  decoded = decoded.force_encoding("UTF-8").scrub
+
+
+  # Clean HTML if no plain text
+  decoded = ActionView::Base.full_sanitizer.sanitize(decoded) if part.mime_type == 'text/html'
+
+  puts "🧠 Decoded: #{decoded.truncate(200)}"
+  decoded
+rescue => e
+  puts "⚠️ extract_body failed: #{e.message}"
+  ""
+end
+
+# Recursively flatten all parts
+def flatten_parts(part)
+  return [part] unless part.parts&.any?
+  part.parts.flat_map { |p| flatten_parts(p) }
+end
+
+
 end
