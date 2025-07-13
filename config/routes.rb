@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "messages/create"
   get "chats/index"
   get "chats/history"
   get "chats/new"
@@ -6,6 +7,12 @@ Rails.application.routes.draw do
   get "contacts/index"
   get '/hubspot/connect', to: 'hubspot#connect', as: :hubspot_connect
   get '/hubspot/callback', to: 'hubspot#callback', as: :hubspot_callback
+  resources :chats do
+    collection do
+    get :history
+  end
+  resources :messages, only: [:create]
+  end
 
   resources :contacts, only: [:index]
 
