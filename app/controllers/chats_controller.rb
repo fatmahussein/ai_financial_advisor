@@ -1,9 +1,8 @@
 class ChatsController < ApplicationController
-  def index
-  end
+  def index; end
 
   def new
-    @chat = Chat.create!(title: "New Chat")
+    @chat = Chat.create!(title: 'New Chat')
     redirect_to chat_path(@chat)
   end
 
@@ -11,10 +10,9 @@ class ChatsController < ApplicationController
     @chat = Chat.find(params[:id])
   end
 
-   def history
+  def history
     @chats = Chat.order(created_at: :desc)
   end
 
-  def create_message
-  end
+  def create_message; end
 end
