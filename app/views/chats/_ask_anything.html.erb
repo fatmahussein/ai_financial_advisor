@@ -1,0 +1,15 @@
+<div id="chat-container">
+  <div id="messages">
+    <!-- Greeting message only if there are no previous messages -->
+    <% if @chat.messages.empty? %>
+      <div class="ai-message">
+        💬 Hi, I am the AI Financial Advisor at Jump. How may I assist you today?
+      </div>
+    <% end %>
+
+    <!-- Chat history -->
+    <%= render partial: "messages/message", collection: @chat.messages.order(:created_at), as: :message %>
+  </div>
+
+  <%= render "messages/form", chat: @chat %>
+</div>

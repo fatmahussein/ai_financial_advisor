@@ -1,0 +1,11 @@
+<h2>Chat History</h2>
+
+<% @chats.each do |chat| %>
+  <li>
+    <%= link_to chat.title.presence || "Untitled Chat ##{chat.id}", chat_path(chat) %>
+    <small>(<%= time_ago_in_words(chat.created_at) %> ago)</small>
+  </li>
+<% end %>
+
+
+<%= link_to "⬅ Back to Chat", root_path %>

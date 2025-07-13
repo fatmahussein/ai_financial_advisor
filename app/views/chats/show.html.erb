@@ -1,0 +1,14 @@
+<!-- app/views/chats/show.html.erb -->
+<div class="top-bar" style="display: flex; justify-content: space-between; align-items: center;">
+  <h2>Ask Anything</h2>
+  <%= link_to "❌", chats_path, method: :delete, data: { turbo_confirm: "Clear this thread?" } %>
+</div>
+
+<div class="tabs" style="margin-top: 1em;">
+  <%= link_to "Chat History", chats_history_path, class: "tab" %>
+  <%= link_to "Add New Thread", chats_new_path, class: "tab" %>
+</div>
+
+<div class="chat-body" style="margin-top: 2em;">
+  <%= render "chats/ask_anything", chat: @chat %>
+</div>

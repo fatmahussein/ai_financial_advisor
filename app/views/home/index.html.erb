@@ -1,15 +1,12 @@
 <h1>Welcome, <%= current_user.name || current_user.email %></h1>
 
-<p><strong>Access Token:</strong> <%= current_user.google_token %></p>
-<p><strong>Refresh Token:</strong> <%= current_user.google_refresh_token %></p>
-<p><strong>Token Expires At:</strong> <%= current_user.token_expires_at %></p>
-<%= link_to "View HubSpot Contacts", hubspot_contacts_path %>
-
 <% unless hubspot_connected?(current_user) %>
   <%= link_to "Connect to HubSpot", hubspot_connect_path, class: "inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" %>
 <% else %>
   <p class="text-green-700">✅ HubSpot Connected</p>
 <% end %>
+
+<%= render "chats/index" %>
 
 <%= link_to "View Synced Contacts", contacts_path, class: "btn ml-2" %>
 
