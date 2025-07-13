@@ -8,3 +8,48 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+  #chat-container {
+  max-width: 700px;
+  margin: auto;
+  padding: 1em;
+}
+
+#messages {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.user-message {
+  align-self: flex-end;
+  background-color: #d1e7dd;
+  color: #0f5132;
+  padding: 0.75em 1em;
+  border-radius: 12px;
+  max-width: 70%;
+}
+
+.ai-message {
+  align-self: flex-start;
+  background-color: #f1f1f1;
+  color: #333;
+  padding: 0.75em 1em;
+  border-radius: 12px;
+  max-width: 70%;
+}
+
+#chat-form{
+     display: flex;
+    justify-content: flex-end;
+    flex-direction: column;
+    margin-top: 12px;
+    align-items: flex-end;
+}
+
+#chat-container form textarea{
+  width: 80%;
+  display: flex;
+  border-radius: 10px;
+  padding: 10px;
+}
