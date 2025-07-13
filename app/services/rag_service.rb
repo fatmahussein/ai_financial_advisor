@@ -1,5 +1,6 @@
 class RagService
   MAX_BODY_LENGTH = 1000
+  GREETINGS = /\A(hi|hello|hey|howdy|good morning|good afternoon|good evening)\W*\z/i
 
   def initialize(user)
     @user = user
@@ -7,6 +8,8 @@ class RagService
   end
 
   def ask(query)
+    return "Hi, how may I assist you today?" if query.match?(GREETINGS)
+
     emails = retrieve_relevant(Email, query)
     notes = retrieve_relevant(ContactNote, query)
 
