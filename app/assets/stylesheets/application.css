@@ -9,7 +9,7 @@
  * Consider organizing styles into separate files for maintainability.
  */
 
-  #chat-container {
+#chat-container {
   max-width: 700px;
   margin: auto;
   padding: 1em;
@@ -39,15 +39,15 @@
   max-width: 70%;
 }
 
-#chat-form{
-     display: flex;
-    justify-content: flex-end;
-    flex-direction: column;
-    margin-top: 12px;
-    align-items: flex-end;
+#chat-form {
+  display: flex;
+  justify-content: flex-end;
+  flex-direction: column;
+  margin-top: 12px;
+  align-items: flex-end;
 }
 
-#chat-container form textarea{
+#chat-container form textarea {
   width: 80%;
   display: flex;
   border-radius: 10px;
