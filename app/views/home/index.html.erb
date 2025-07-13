@@ -5,8 +5,8 @@
 <% else %>
   <p class="text-green-700">✅ HubSpot Connected</p>
 <% end %>
-
-<%= render "chats/index" %>
-
-<%= link_to "View Synced Contacts", contacts_path, class: "btn ml-2" %>
+<div id="chat-section">
+<%= render "chats/index", chat: @chat %>
+</div>
+<!-- <%= link_to "View Synced Contacts", contacts_path, class: "btn ml-2" %> -->
 
