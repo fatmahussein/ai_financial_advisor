@@ -22,13 +22,13 @@ class RagService
 
   private
 
-  def retrieve_relevant(model, query, k: 5)
+  def retrieve_relevant(model, query, limit: 5)
     query_embedding = @ollama.embed(query)
     return [] if query_embedding.blank?
 
     model.where(user: @user)
-      .order(Arel.sql("embedding <#> '[#{query_embedding.join(',')}]'"))
-      .limit(k)
+         .order(Arel.sql("embedding <#> '[#{query_embedding.join(',')}]'"))
+         .limit(limit)
   end
 
   def build_prompt(emails, notes, query)
