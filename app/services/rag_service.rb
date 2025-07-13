@@ -27,8 +27,8 @@ class RagService
     return [] if query_embedding.blank?
 
     model.where(user: @user)
-         .order(Arel.sql("embedding <#> '[#{query_embedding.join(',')}]'"))
-         .limit(limit)
+      .order(Arel.sql("embedding <#> '[#{query_embedding.join(',')}]'"))
+      .limit(limit)
   end
 
   def build_prompt(emails, notes, query)
