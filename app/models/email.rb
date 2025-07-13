@@ -2,7 +2,7 @@ class Email < ApplicationRecord
   belongs_to :user
   after_create_commit :generate_embedding
 
-  scope :similar_to, ->(vector, limit: 5) {
+  scope :similar_to, lambda { |vector, limit: 5|
     order(Arel.sql("embedding <-> '#{Pgvector::Vector.new(vector).to_sql}'")).limit(limit)
   }
 
@@ -32,6 +32,7 @@ class Email < ApplicationRecord
 
   def generate_embedding
     return if body.blank? || embedding.present?
+
     update(embedding: OllamaEmbeddingGenerator.new(body).call)
   end
 end

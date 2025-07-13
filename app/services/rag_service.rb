@@ -10,9 +10,7 @@ class RagService
     emails = retrieve_relevant(Email, query)
     notes = retrieve_relevant(ContactNote, query)
 
-    if emails.blank? && notes.blank?
-      return "No relevant emails or notes found."
-    end
+    return 'No relevant emails or notes found.' if emails.blank? && notes.blank?
 
     puts "🔍 Retrieved #{emails.size} emails and #{notes.size} contact notes"
     emails.each { |e| puts "  - Email ID: #{e.id}" }
@@ -20,7 +18,6 @@ class RagService
 
     prompt = build_prompt(emails, notes, query)
     @ollama.answer(prompt, stream: true)
-
   end
 
   private
@@ -30,8 +27,8 @@ class RagService
     return [] if query_embedding.blank?
 
     model.where(user: @user)
-         .order(Arel.sql("embedding <#> '[#{query_embedding.join(',')}]'"))
-         .limit(k)
+      .order(Arel.sql("embedding <#> '[#{query_embedding.join(',')}]'"))
+      .limit(k)
   end
 
   def build_prompt(emails, notes, query)

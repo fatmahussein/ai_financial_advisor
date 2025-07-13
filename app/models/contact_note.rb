@@ -2,7 +2,7 @@ class ContactNote < ApplicationRecord
   belongs_to :contact
   belongs_to :user
 
-  scope :similar_to, ->(vector, limit: 5) {
+  scope :similar_to, lambda { |vector, limit: 5|
     order(Arel.sql("embedding <-> '#{Pgvector::Vector.new(vector).to_sql}'")).limit(limit)
   }
 

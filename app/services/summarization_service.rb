@@ -1,4 +1,3 @@
-# app/services/summarization_service.rb
 class SummarizationService
   def initialize(user)
     @ollama = OllamaService.new(user)
