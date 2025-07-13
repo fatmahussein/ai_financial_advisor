@@ -1,0 +1,4 @@
+<%= form_with url: chat_messages_path(chat), method: :post, remote: true, id: "chat-form" do |f| %>
+  <%= f.text_area :message, rows: 3, placeholder: "Ask anything..." %>
+  <%= f.submit "Send" %>
+<% end %>
