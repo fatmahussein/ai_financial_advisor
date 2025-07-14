@@ -9,7 +9,7 @@ class MessagesController < ApplicationController
 
     rag_service = RagService.new(current_user)
     display_text, tool_call = rag_service.ask(message_text)
-   puts "👤 Current user: #{current_user.inspect}"
+    puts "👤 Current user: #{current_user.inspect}"
 
     # Run tool if any
     tool_output = nil

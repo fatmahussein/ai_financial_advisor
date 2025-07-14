@@ -15,17 +15,14 @@ module Tools
         summary: summary,
         description: description,
         start: Google::Apis::CalendarV3::EventDateTime.new(date_time: start_time),
-        end:   Google::Apis::CalendarV3::EventDateTime.new(date_time: end_time),
+        end: Google::Apis::CalendarV3::EventDateTime.new(date_time: end_time),
         attendees: attendees.map { |email| { email: email } }
       )
 
-      result = @service.insert_event('primary', event)
-      return result
-
-      
-    rescue => e
+      @service.insert_event('primary', event)
+    rescue StandardError => e
       puts "❌ Calendar event error: #{e.message}"
-      "Something went wrong creating the calendar event."
+      'Something went wrong creating the calendar event.'
     end
   end
 end

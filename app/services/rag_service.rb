@@ -6,26 +6,25 @@ class RagService
     @user = user
     @ollama = OllamaService.new(user)
   end
-  
-def ask(query)
-  return ['Hi, how may I assist you today?', nil] if query.match?(GREETINGS)
 
-  emails = retrieve_relevant(Email, query)
-  notes = retrieve_relevant(ContactNote, query)
+  def ask(query)
+    return ['Hi, how may I assist you today?', nil] if query.match?(GREETINGS)
 
-  prompt = build_prompt(emails, notes, query)
-  ai_response = @ollama.answer(prompt)
+    emails = retrieve_relevant(Email, query)
+    notes = retrieve_relevant(ContactNote, query)
 
-  tool_call = extract_tool_call(ai_response)
-  display_text = if tool_call
-    "✉️ Sending an email to #{tool_call.dig(:arguments, :to)}..."
-  else
-    ai_response
+    prompt = build_prompt(emails, notes, query)
+    ai_response = @ollama.answer(prompt)
+
+    tool_call = extract_tool_call(ai_response)
+    display_text = if tool_call
+                     "✉️ Sending an email to #{tool_call.dig(:arguments, :to)}..."
+                   else
+                     ai_response
+                   end
+
+    [display_text, tool_call]
   end
-
-  [display_text, tool_call]
-end
-
 
   private
 
@@ -64,18 +63,19 @@ end
   end
 
   def extract_tool_call(response)
-  begin
-    json = JSON.parse(response) rescue nil
-    return nil unless json.is_a?(Hash) && json["tool_call"]
+    json = begin
+      JSON.parse(response)
+    rescue StandardError
+      nil
+    end
+    return nil unless json.is_a?(Hash) && json['tool_call']
 
     {
-      tool_name: json["tool_call"]["name"],
-      arguments: json["tool_call"]["args"]
+      tool_name: json['tool_call']['name'],
+      arguments: json['tool_call']['args']
     }
-  rescue => e
+  rescue StandardError => e
     puts "⚠️ Tool call extraction error: #{e.message}"
     nil
   end
-end
-
 end

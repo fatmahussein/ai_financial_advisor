@@ -1,20 +1,21 @@
-require "google/apis/gmail_v1"
-require "signet/oauth_2/client"
-require "base64"
-require "mail"
+require 'google/apis/gmail_v1'
+require 'signet/oauth_2/client'
+require 'base64'
+require 'mail'
 
 class GmailClient
- def initialize(user)
-  raise ArgumentError, "User must be provided" if user.nil?
-  @user = user
-  @client = Google::Apis::GmailV1::GmailService.new
-  @client.authorization = Signet::OAuth2::Client.new(
-    access_token: @user.google_access_token
-  )
-end
+  def initialize(user)
+    raise ArgumentError, 'User must be provided' if user.nil?
+
+    @user = user
+    @client = Google::Apis::GmailV1::GmailService.new
+    @client.authorization = Signet::OAuth2::Client.new(
+      access_token: @user.google_access_token
+    )
+  end
 
   def send_email(to:, subject:, body:)
-    sender_email = @user.email
+    @user.email
 
     raw_message = build_raw_message(to: to, subject: subject, body: body)
 
@@ -24,7 +25,7 @@ end
   rescue Google::Apis::ClientError => e
     puts "❌ Gmail API ClientError: #{e.message}"
     raise
-  rescue => e
+  rescue StandardError => e
     puts "❌ Unexpected error: #{e.message}"
     raise
   end
@@ -33,10 +34,10 @@ end
 
   def build_raw_message(to:, subject:, body:)
     mail = Mail.new do
-      from    @user.email
-      to      to
+      from @user.email
+      to to
       subject subject
-      body    body
+      body body
     end
 
     mail.content_type = 'text/plain; charset=UTF-8'
