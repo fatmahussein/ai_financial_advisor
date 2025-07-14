@@ -6,22 +6,26 @@ class RagService
     @user = user
     @ollama = OllamaService.new(user)
   end
+  
+def ask(query)
+  return ['Hi, how may I assist you today?', nil] if query.match?(GREETINGS)
 
-  def ask(query)
-    return 'Hi, how may I assist you today?' if query.match?(GREETINGS)
+  emails = retrieve_relevant(Email, query)
+  notes = retrieve_relevant(ContactNote, query)
 
-    emails = retrieve_relevant(Email, query)
-    notes = retrieve_relevant(ContactNote, query)
+  prompt = build_prompt(emails, notes, query)
+  ai_response = @ollama.answer(prompt)
 
-    return 'No relevant emails or notes found.' if emails.blank? && notes.blank?
-
-    puts "🔍 Retrieved #{emails.size} emails and #{notes.size} contact notes"
-    emails.each { |e| puts "  - Email ID: #{e.id}" }
-    notes.each { |n| puts "  - Note ID: #{n.id}" }
-
-    prompt = build_prompt(emails, notes, query)
-    @ollama.answer(prompt, stream: true)
+  tool_call = extract_tool_call(ai_response)
+  display_text = if tool_call
+    "✉️ Sending an email to #{tool_call.dig(:arguments, :to)}..."
+  else
+    ai_response
   end
+
+  [display_text, tool_call]
+end
+
 
   private
 
@@ -58,4 +62,20 @@ class RagService
     puts "📝 Prompt length: #{prompt.length} characters"
     prompt[0...OllamaService::MAX_PROMPT_LENGTH]
   end
+
+  def extract_tool_call(response)
+  begin
+    json = JSON.parse(response) rescue nil
+    return nil unless json.is_a?(Hash) && json["tool_call"]
+
+    {
+      tool_name: json["tool_call"]["name"],
+      arguments: json["tool_call"]["args"]
+    }
+  rescue => e
+    puts "⚠️ Tool call extraction error: #{e.message}"
+    nil
+  end
+end
+
 end
