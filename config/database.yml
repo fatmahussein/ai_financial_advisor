@@ -4,10 +4,10 @@ encoding: unicode
 pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
 development:
 <<: *default
-database: ai_financial_advisor_development
+database: app_name_development
 test:
 <<: *default
-database: ai_financial_advisor_test
+database: app_name_test
 production:
 <<: *default
 url: <%= ENV['DATABASE_URL'] %>
