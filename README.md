@@ -27,7 +27,7 @@
 
 # AI Financial Advisor <a name="ai-financial-advisor"></a>
 
-**AI Financial Advisorr** is a Rails-based AI assistant for financial advisors that integrates with Gmail, Google Calendar, and HubSpot. It uses RAG (Retrieval-Augmented Generation) with Ollama to provide intelligent responses, context-aware actions, and proactive workflows. 
+**AI Financial Advisor** is a Rails-based AI assistant for financial advisors that integrates with Gmail, Google Calendar, and HubSpot. It uses RAG (Retrieval-Augmented Generation) with Ollama to provide intelligent responses, context-aware actions, and proactive workflows. 
 
 
 [Live demo]()
@@ -86,13 +86,13 @@ Migrate the tables to the database
 Make sure you have .env or credentials.yml.enc configured with your OAuth keys. 
 
 `
-GOOGLE_CLIENT_ID= 
-GOOGLE_CLIENT_SECRET=
-HUBSPOT_CLIENT_ID=
-HUBSPOT_CLIENT_SECRET=
-HUBSPOT_REDIRECT_URI=
-HUBSPOT_SCOPES= example scopes
-GOOGLE_REDIRECT_URI=http://localhost:3000/users/auth/google_oauth2/callback
+- GOOGLE_CLIENT_ID= 
+- GOOGLE_CLIENT_SECRET=
+- HUBSPOT_CLIENT_ID=
+- HUBSPOT_CLIENT_SECRET=
+- HUBSPOT_REDIRECT_URI=
+- HUBSPOT_SCOPES= example scopes
+- GOOGLE_REDIRECT_URI=http://localhost:3000/users/auth/google_oauth2/callback
 `
 
 
