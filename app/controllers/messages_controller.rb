@@ -1,20 +1,27 @@
 class MessagesController < ApplicationController
+  before_action :authenticate_user!
   def create
     @chat = Chat.find(params[:chat_id])
     message_text = params[:message]
-    # Create user message
+
     @user_message = @chat.messages.create!(content: message_text, role: 'user')
-    # Set title if chat doesn't have one yet
-    if @chat.title.blank?
-      short_title = message_text.truncate(50) # Limit to 50 characters
-      @chat.update(title: short_title)
+    @chat.update(title: message_text.truncate(50)) if @chat.title.blank?
+
+    rag_service = RagService.new(current_user)
+    display_text, tool_call = rag_service.ask(message_text)
+    puts "👤 Current user: #{current_user.inspect}"
+
+    # Run tool if any
+    tool_output = nil
+    if tool_call
+      tool_output = ToolCallService.new(current_user).call_tool(
+        tool_call[:tool_name],
+        tool_call[:arguments]
+      )
     end
 
-    # Get AI response
-    ai_response = RagService.new(current_user).ask(message_text)
-
-    # Save AI response
-    @ai_message = @chat.messages.create!(content: ai_response, role: 'ai')
+    final_response = tool_output || display_text
+    @ai_message = @chat.messages.create!(content: final_response, role: 'ai')
 
     respond_to do |format|
       format.turbo_stream

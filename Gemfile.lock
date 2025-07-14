@@ -524,6 +524,7 @@ DEPENDENCIES
   importmap-rails
   jbuilder
   kamal
+  mail
   neighbor
   nokogiri
   ollama-ai (~> 1.3.0)

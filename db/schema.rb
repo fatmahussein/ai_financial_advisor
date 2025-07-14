@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_13_102733) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_13_143840) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -80,6 +80,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_13_102733) do
     t.index ["chat_id"], name: "index_messages_on_chat_id"
   end
 
+  create_table "rules", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "condition"
+    t.string "action"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_rules_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -98,6 +107,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_13_102733) do
     t.string "hubspot_refresh_token"
     t.datetime "hubspot_token_expires_at"
     t.datetime "google_token_expires_at"
+    t.string "google_access_token"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
@@ -108,4 +118,5 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_13_102733) do
   add_foreign_key "email_embeddings", "emails"
   add_foreign_key "emails", "users"
   add_foreign_key "messages", "chats"
+  add_foreign_key "rules", "users"
 end

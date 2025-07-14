@@ -11,33 +11,68 @@ class OllamaService
   end
 
   def answer(prompt, model = 'llama3', stream: false)
-    prompt = prompt[0...MAX_PROMPT_LENGTH] if prompt.length > MAX_PROMPT_LENGTH
-    puts "🚀 Sending prompt (#{prompt.length} chars) to Ollama..."
+    tools = <<~TOOLS
+        Available tools:
 
-    begin
-      response = Faraday.post("#{BASE_URL}/api/generate") do |req|
-        req.options.timeout = 60
-        req.headers['Content-Type'] = 'application/json'
-        req.body = { model: model, prompt: prompt, stream: stream }.to_json
-      end
+          1. create_calendar_event
+        - Use this tool to add events to the user's Google Calendar.
+        - Required arguments:
+        - summary: Title of the event
+        - start_time: Start time (ISO 8601 format)
+        - end_time: End time (ISO 8601 format)
+        - attendees (optional): Array of email addresses
+        - description (optional): Extra info
 
-      if stream
-        stream_text = ''
-        response.body.each_line do |line|
-          json = JSON.parse(line)
-          stream_text << json['response'].to_s
-          print json['response']
-        end
-        stream_text
-      else
-        JSON.parse(response.body)['response']
-      end
-    rescue Faraday::TimeoutError
-      'The response timed out. Please try again.'
-    rescue StandardError => e
-      puts "❌ Error: #{e.message}"
-      'Something went wrong.'
+        If the prompt is a request to schedule something, respond like:
+
+      {
+        "tool_call": {
+          "name": "create_calendar_event",
+          "args": {
+            "summary": "Investment Review with Sara",
+            "start_time": "2025-07-14T15:00:00+03:00",
+            "end_time": "2025-07-14T16:00:00+03:00",
+            "attendees": ["sara@example.com"],
+            "description": "Discuss investment updates."
+          }
+        }
+      }
+
+        Only output a JSON object with the tool call. Do not explain or add any other text unless no tool is needed.
+    TOOLS
+
+    full_prompt = "#{tools.strip}\n\n#{prompt.strip}"
+    puts "🚀 Sending prompt (#{full_prompt.length} chars) to Ollama (chat endpoint)..."
+
+    messages = [{ role: 'system', content: tools.strip }, { role: 'user', content: prompt.strip }]
+
+    response = Faraday.post("#{BASE_URL}/api/chat") do |req|
+      req.options.timeout = 120
+      req.headers['Content-Type'] = 'application/json'
+      req.body = {
+        model: model,
+        messages: messages,
+        stream: stream
+      }.to_json
     end
+
+    if stream
+      stream_text = ''
+      response.body.each_line do |line|
+        json = JSON.parse(line)
+        stream_text << json['message']['content'].to_s
+        print json['message']['content']
+      end
+      stream_text
+    else
+      json = JSON.parse(response.body)
+      json.dig('message', 'content')
+    end
+  rescue Faraday::TimeoutError
+    'The response timed out. Please try again.'
+  rescue StandardError => e
+    puts "❌ Error: #{e.message}"
+    'Something went wrong.'
   end
 
   def embed(text)
