@@ -30,8 +30,6 @@
 **AI Financial Advisor** is a Rails-based AI assistant for financial advisors that integrates with Gmail, Google Calendar, and HubSpot. It uses RAG (Retrieval-Augmented Generation) with Ollama to provide intelligent responses, context-aware actions, and proactive workflows. 
 
 
-[Live demo]()
-
 
 
 ## 🛠 Built With <a name="built-with"></a>
