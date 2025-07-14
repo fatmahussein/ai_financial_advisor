@@ -6,18 +6,21 @@ class HubspotController < ApplicationController
   before_action :authenticate_user!
   skip_before_action :authenticate_user!, only: [:callback]
 
+  # Step 1: Start OAuth flow
   def connect
     state = SecureRandom.hex(20)
-    Rails.cache.write("hubspot_oauth_#{state}", current_user.id, expires_in: 10.minutes)
+    session[:hubspot_oauth_state] = state
+    session[:hubspot_oauth_user_id] = current_user.id
 
-    redirect_to 'https://app.hubspot.com/oauth/authorize' \
-                "?client_id=#{ENV.fetch('HUBSPOT_CLIENT_ID', nil)}" \
-                "&redirect_uri=#{ENV.fetch('HUBSPOT_REDIRECT_URI', nil)}" \
-                "&scope=#{CGI.escape(ENV.fetch('HUBSPOT_SCOPES', nil))}" \
+    redirect_to "https://app.hubspot.com/oauth/authorize" \
+                "?client_id=#{ENV.fetch('HUBSPOT_CLIENT_ID')}" \
+                "&redirect_uri=#{ENV.fetch('HUBSPOT_REDIRECT_URI')}" \
+                "&scope=#{CGI.escape(ENV.fetch('HUBSPOT_SCOPES'))}" \
                 "&state=#{state}",
                 allow_other_host: true
   end
 
+  # Step 2: OAuth callback
   def callback
     Rails.logger.debug "HubSpot callback params: #{params.inspect}"
 
@@ -32,6 +35,7 @@ class HubspotController < ApplicationController
     end
   end
 
+  # Fetch contacts from HubSpot
   def contacts
     client = Hubspot::Client.new(current_user)
     @contacts = client.contacts
@@ -41,6 +45,7 @@ class HubspotController < ApplicationController
     redirect_to home_index_path, alert: 'Unable to fetch HubSpot contacts.'
   end
 
+  # Sync contacts to local database
   def sync_contacts
     client = Hubspot::Client.new(current_user)
     contacts_data = client.contacts
@@ -68,31 +73,38 @@ class HubspotController < ApplicationController
 
   private
 
+  # Exchange code for access/refresh tokens
   def exchange_code_for_tokens(code)
     uri = URI('https://api.hubapi.com/oauth/v1/token')
 
     res = Net::HTTP.post_form(uri, {
-                                grant_type: 'authorization_code',
-                                client_id: ENV.fetch('HUBSPOT_CLIENT_ID', nil),
-                                client_secret: ENV.fetch('HUBSPOT_CLIENT_SECRET', nil),
-                                redirect_uri: ENV.fetch('HUBSPOT_REDIRECT_URI', nil),
-                                code: code
-                              })
+      grant_type: 'authorization_code',
+      client_id: ENV.fetch('HUBSPOT_CLIENT_ID'),
+      client_secret: ENV.fetch('HUBSPOT_CLIENT_SECRET'),
+      redirect_uri: ENV.fetch('HUBSPOT_REDIRECT_URI'),
+      code: code
+    })
 
     JSON.parse(res.body)
   end
 
+  # Restore user from session (instead of cache)
   def fetch_user_from_state(state)
-    user_id = Rails.cache.read("hubspot_oauth_#{state}")
-    Rails.cache.delete("hubspot_oauth_#{state}")
+    return nil unless session[:hubspot_oauth_state] == state
+
+    user_id = session.delete(:hubspot_oauth_user_id)
+    session.delete(:hubspot_oauth_state)
+
     User.find_by(id: user_id)
   end
 
+  # Handle expired or invalid state token
   def handle_invalid_state
     Rails.logger.warn "Invalid or expired HubSpot state token: #{params[:state]}"
     redirect_to new_user_session_path, alert: 'Session expired. Please try connecting again.'
   end
 
+  # Complete token exchange and update user
   def process_token_exchange(code)
     response = exchange_code_for_tokens(code)
     Rails.logger.debug "HubSpot token exchange response: #{response.inspect}"
@@ -108,6 +120,7 @@ class HubspotController < ApplicationController
     end
   end
 
+  # Persist HubSpot tokens to user
   def update_user_tokens(user, response)
     user.update!(
       hubspot_access_token: response['access_token'],
