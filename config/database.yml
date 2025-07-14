@@ -1,13 +1,16 @@
 default: &default
-adapter: postgresql
-encoding: unicode
-pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  adapter: postgresql
+  encoding: unicode
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+
 development:
-<<: *default
-database: app_name_development
+  <<: *default
+  database: ai_financial_advisor_development
+
 test:
-<<: *default
-database: app_name_test
+  <<: *default
+  database: ai_financial_advisor_test
+
 production:
-<<: *default
-url: <%= ENV['DATABASE_URL'] %>
+  <<: *default
+  url: <%= ENV['DATABASE_URL'] %>
