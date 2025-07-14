@@ -1,15 +1,16 @@
 class ToolCallService
   def initialize(user)
     raise ArgumentError, 'User is nil!' if user.nil?
+
     @user = user
   end
 
   def call_tool(tool_name, arguments)
     case tool_name
-    when 'send_email'             then handle_send_email(arguments)
-    when 'create_calendar_event'  then handle_create_calendar_event(arguments)
-    when 'create_contact'         then handle_create_contact(arguments)
-    when 'add_note_to_contact'    then handle_add_note_to_contact(arguments)
+    when 'send_email' then handle_send_email(arguments)
+    when 'create_calendar_event' then handle_create_calendar_event(arguments)
+    when 'create_contact' then handle_create_contact(arguments)
+    when 'add_note_to_contact' then handle_add_note_to_contact(arguments)
     else raise ArgumentError, "Unknown tool: #{tool_name}"
     end
   end
