@@ -1,10 +1,14 @@
-<h1>Welcome, <%= current_user.name || current_user.email %></h1>
+<div id="welcome">
+  <h1>Welcome, <%= current_user.name || current_user.email %></h1>
+<%= button_to "Sign Out", destroy_user_session_path, method: :delete, class: "inline-block bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 ml-2" %>
+</div>
 
 <% unless hubspot_connected?(current_user) %>
   <%= link_to "Connect to HubSpot", hubspot_connect_path, class: "inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" %>
 <% else %>
   <p class="text-green-700">✅ HubSpot Connected</p>
 <% end %>
+
 <div id="chat-section">
 <%= render "chats/index", chat: @chat %>
 </div>
